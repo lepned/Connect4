@@ -19,44 +19,8 @@ namespace Connect4
             };
         }
         
-        public static string DebugInfo(ulong bitboard)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine();
-            int[,] board = new int[9, 7];
-            const int mask = 1;
-            var b = bitboard;
-
-            for (int col = 0; col < 7; col++)
-            {
-                for (int row = 0; row < 7; row++)
-                {
-                    var bit = b & mask;
-                    board[col, row] = (int)bit;
-                    b >>= 1;
-                }
-            }
-
-            //top row
-            for (int i = 0; i < 7; i++)
-            {
-                board[i, 6] = 0;
-            }
-
-            var cols = board.GetUpperBound(0);
-
-            for (int row = 7; row >= 0; row--)
-            {
-                for (int c = 0; c <= cols; c++)
-                {
-                    sb.Append(board[c, row] + " ");
-                }
-                sb.AppendLine();
-            }
-
-            return sb.ToString();            
-        }
-        public static string StateToBinaryString(ulong bitboard)
+        
+        public static string BitboardToString(ulong bitboard)
         {
             var sb = new StringBuilder();
             sb.AppendLine();
@@ -136,7 +100,6 @@ namespace Connect4
         {
             var sb = new StringBuilder();
             sb.AppendLine();
-            var rows = board.GetUpperBound(0);
             var cols = board.GetUpperBound(1);
 
             for (int row = 5; row >= 0; row--)

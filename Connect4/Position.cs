@@ -5,7 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using position_t = System.UInt64;
+using Bitboard = System.UInt64;
 
 namespace Connect4
 {
@@ -13,73 +13,73 @@ namespace Connect4
     {
         public Position(Position pos)
         {
-            current_position = pos.current_position;
-            mask = pos.mask;
-            moves = pos.moves;
-            ColumnPlayed = pos.ColumnPlayed;
-            //MoveList = pos.MoveList;
+            CurrentPosition = pos.CurrentPosition;
+            Mask = pos.Mask;
+            Moves = pos.Moves;
             MoveList = new List<ulong>();
         }
         public Position()
         {
             Debug.Assert(WIDTH < 8, "Board width must be 7 columns");
             Debug.Assert(WIDTH * (HEIGHT + 1) < 64, "Board does not fit in 64bits bitboard");
-            current_position = 0;
-            mask = 0;
-            moves = 0;
+            CurrentPosition = 0;
+            Mask = 0;
+            Moves = 0;
             MoveList = new List<ulong>();
 
         }
         public static int WIDTH = 7;  // width of the board
         public static int HEIGHT = 6; // height of the board
         public List<ulong> MoveList { get; set; }
-        public static int MIN_SCORE = -(WIDTH * HEIGHT) / 2 + 3;
-        public static int MAX_SCORE = (WIDTH * HEIGHT + 1) / 2 - 3;
-        public position_t current_position; // bitmap of the current_player stones
-        public position_t mask;             // bitmap of all the already palyed spots
-        int moves;        // number of moves played since the beinning of the game.
-        public int ColumnPlayed { get; set; }
+        //public static int MIN_SCORE = -(WIDTH * HEIGHT) / 2 + 3;
+        //public static int MAX_SCORE = (WIDTH * HEIGHT + 1) / 2 - 3;
 
-        public bool canPlay(int col) => (mask & top_mask_col(col)) == 0;
+        public Bitboard CurrentPosition { get; set; } //public Bitboard current_position; // bitmap of the current_player stones
 
-        public void playCol(int col)
+        public Bitboard Mask { get; set; } // bitmap of all the already palyed spots
+
+        public int Moves { get; set; } // number of moves played since the beinning of the game.
+
+        public bool CanPlay(int col) => (Mask & TopMaskCol(col)) == 0;
+
+        public void PlayCol(int col)
         {
-            ColumnPlayed = col;
-            play((mask + bottom_mask_col(col)) & column_mask(col));
+            Play((Mask + BottomMaskCol(col)) & ColumnMask(col));
         }
 
-        public bool isWinningMove(int col)
+        public bool IsWinningMove(int col)
         {
-            return (winning_position() & possible() & column_mask(col)) != 0ul;
+            return (Winning_position() & Possible() & ColumnMask(col)) != 0ul;
         }
 
-        public void play(position_t move)
+        public void Play(Bitboard move)
         {
             MoveList.Add(move);
-            current_position ^= mask;
-            mask |= move;
-            moves++;
+            CurrentPosition ^= Mask;
+            Mask |= move;
+            Moves++;
         }
 
-        public int play(IEnumerable<string> seq)
+        //not in use yet
+        public int Play(IEnumerable<string> seq)
         {
             for (int i = 0; i < seq.Count(); i++)
             {
                 int col = Convert.ToInt32(seq.ElementAt(i)) - 1;
-                if (isWinningMove(col))
+                if (IsWinningMove(col))
                 {
                     Console.WriteLine($"Game over with the next move in column {col} after {nbMoves()} moves");
                 }
-                if (col < 0 || col >= Position.WIDTH || !canPlay(col) || isWinningMove(col))
+                if (col < 0 || col >= Position.WIDTH || !CanPlay(col) || IsWinningMove(col))
                 {
-                    if (!canPlay(col)) // invalid move
+                    if (!CanPlay(col)) // invalid move
                     {
                         Console.WriteLine($"Invalid move in col {col} after {nbMoves()} moves");
                         continue;
                     }
                     return i;
                 }
-                playCol(col);
+                PlayCol(col);
 
             }
             return seq.Count();
@@ -87,30 +87,30 @@ namespace Connect4
 
         public bool canWinNext()
         {
-            return (winning_position() & possible()) != 0ul;
+            return (Winning_position() & Possible()) != 0ul;
         }
 
         public int nbMoves()
         {
-            return moves;
+            return Moves;
         }
 
-        public position_t key()
+        public Bitboard key()
         {
-            return current_position + mask;
+            return CurrentPosition + Mask;
         }
 
-        public int moveScore(position_t move)
+        public int moveScore(Bitboard move)
         {
-            return BitOperations.PopCount(compute_winning_position(current_position | move, mask));
+            return BitOperations.PopCount(ComputeWinningPosition(CurrentPosition | move, Mask));
         }
 
-        public position_t possibleNonLosingMoves()
+        public Bitboard PossibleNonLosingMoves()
         {
             //Debug.Assert(!canWinNext());
-            position_t possible_mask = possible();
-            position_t opponent_win = opponent_winning_position();
-            position_t forced_moves = possible_mask & opponent_win;
+            Bitboard possible_mask = Possible();
+            Bitboard opponent_win = Opponent_winning_position();
+            Bitboard forced_moves = possible_mask & opponent_win;
             if (forced_moves != 0ul)
             {
                 if ((forced_moves & (forced_moves - 1)) != 0ul) // check if there is more than one forced move
@@ -120,19 +120,19 @@ namespace Connect4
             return possible_mask & ~(opponent_win >> 1);  // avoid to play below an opponent winning spot
         }
 
-        position_t winning_position() => compute_winning_position(current_position, mask);
+        Bitboard Winning_position() => ComputeWinningPosition(CurrentPosition, Mask);
 
-        position_t opponent_winning_position() => compute_winning_position(current_position ^ mask, mask);
+        Bitboard Opponent_winning_position() => ComputeWinningPosition(CurrentPosition ^ Mask, Mask);
 
-        position_t possible() => (mask + bottom_mask(WIDTH, HEIGHT)) & board_mask;
+        Bitboard Possible() => (Mask + BottomMask(WIDTH, HEIGHT)) & board_mask;
 
-        static position_t compute_winning_position(position_t position, position_t mask)
+        static Bitboard ComputeWinningPosition(Bitboard position, Bitboard mask)
         {
             // vertical;
-            position_t r = (position << 1) & (position << 2) & (position << 3);
+            Bitboard r = (position << 1) & (position << 2) & (position << 3);
 
             //horizontal
-            position_t p = (position << (HEIGHT + 1)) & (position << 2 * (HEIGHT + 1));
+            Bitboard p = (position << (HEIGHT + 1)) & (position << 2 * (HEIGHT + 1));
             r |= p & (position << 3 * (HEIGHT + 1));
             r |= p & (position >> (HEIGHT + 1));
             p = (position >> (HEIGHT + 1)) & (position >> 2 * (HEIGHT + 1));
@@ -158,24 +158,14 @@ namespace Connect4
             return r & (board_mask ^ mask);
         }
 
-        static position_t top_mask_col(int col) => 1ul << ((HEIGHT - 1) + col * (HEIGHT + 1));
+        static Bitboard TopMaskCol(int col) => 1ul << ((HEIGHT - 1) + col * (HEIGHT + 1));
 
-        public static position_t bottom_mask_col(int col) => 1ul << col * (HEIGHT + 1);
+        public static Bitboard BottomMaskCol(int col) => 1ul << col * (HEIGHT + 1);
 
-        public static position_t column_mask(int col) => ((1ul << HEIGHT) - 1) << col * (HEIGHT + 1);
+        public static Bitboard ColumnMask(int col) => ((1ul << HEIGHT) - 1) << col * (HEIGHT + 1);
 
-        public static position_t bottom_mask(int width, int height) => 4432676798593ul | 1ul << (width - 1) * (height + 1);
-        static position_t board_mask => bottom_mask(WIDTH, HEIGHT) * ((1ul << HEIGHT) - 1);
-
-        public static position_t bottom()
-        {
-            var start = 1ul << 0;
-            for (int i = 0; i < WIDTH; i++)
-            {
-                start = start | 1ul << 7 * i;
-            }
-            return start;
-        }
-
+        public static Bitboard BottomMask(int width, int height) => 4432676798593ul | 1ul << (width - 1) * (height + 1);
+        static Bitboard board_mask => BottomMask(WIDTH, HEIGHT) * ((1ul << HEIGHT) - 1);
+        
     }
 }

@@ -19,26 +19,26 @@ namespace Connect4
             row0 &= 0xffUL;
             var row1 = 0xffUL;
 
-            var boardString = Utils.StateToBinaryString(board);
+            var boardString = Utils.BitboardToString(board);
             Console.WriteLine(boardString);
-            var state = Utils.StateToBinaryString(row0);
+            var state = Utils.BitboardToString(row0);
             Console.WriteLine(state);
-            var state1 = Utils.StateToBinaryString(row1);
+            var state1 = Utils.BitboardToString(row1);
             Console.WriteLine(state1);
         }
 
         public static void FindMovesInRow(int row)
         {
-            var bottomRow = bottom(row);
+            var bottomRow = RowMask(row);
             var board = 1UL;
             var res = board & bottomRow;
-            var boardString = Utils.StateToBinaryString(res);
+            var boardString = Utils.BitboardToString(res);
             Console.WriteLine(boardString);
         }
 
         public static int CountMovesInRow(int row)
         {
-            var bottomRow = bottom(row);
+            var bottomRow = RowMask(row);
             var board = 1UL;
             var res = board & bottomRow;
             return BitOperations.PopCount(res);
@@ -47,20 +47,20 @@ namespace Connect4
         public static void MakeMove(int col)
         {
             var boardState = 1UL >> 7;
-            var board = (boardState + Position.bottom_mask_col(col)) & Position.column_mask(col);
-            var boardString = Utils.StateToBinaryString(board);
+            var board = (boardState + Position.BottomMaskCol(col)) & Position.ColumnMask(col);
+            var boardString = Utils.BitboardToString(board);
             Console.WriteLine(boardString);
         }
 
         public static void BottomTest()
         {
-            var t1 = Utils.StateToBinaryString(4432676798593);
+            var t1 = Utils.BitboardToString(4432676798593);
             Console.WriteLine(t1);
         }
 
         public static void ColumnTest(int col)
         {
-            var boardString = Utils.StateToBinaryString(Position.column_mask(col));
+            var boardString = Utils.BitboardToString(Position.ColumnMask(col));
             Console.WriteLine(boardString);
         }
 
@@ -70,13 +70,13 @@ namespace Connect4
             for (int i = 0; i < 64; i++)
             {
                 board = board | 1UL << i;
-                var state = Utils.StateToBinaryString(board);
+                var state = Utils.BitboardToString(board);
                 Console.WriteLine(i);
                 Console.WriteLine(state);
             }
         }
 
-        public static ulong bottom(int row)
+        public static ulong RowMask(int row)
         {
             var start = 0ul;
             for (int i = 0; i < 7; i++)
