@@ -1,0 +1,89 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Connect4
+{
+    public class BitTesting
+    {
+        public static void RunTest1()
+        {
+            var board = 1UL << 2;
+            var row0 = board & 0x01010101010101UL;
+            row0 += row0 >> 32;
+            row0 += row0 >> 16;
+            row0 += row0 >> 8;
+            row0 &= 0xffUL;
+            var row1 = 0xffUL;
+
+            var boardString = Utils.StateToBinaryString(board);
+            Console.WriteLine(boardString);
+            var state = Utils.StateToBinaryString(row0);
+            Console.WriteLine(state);
+            var state1 = Utils.StateToBinaryString(row1);
+            Console.WriteLine(state1);
+        }
+
+        public static void FindMovesInRow(int row)
+        {
+            var bottomRow = bottom(row);
+            var board = 1UL;
+            var res = board & bottomRow;
+            var boardString = Utils.StateToBinaryString(res);
+            Console.WriteLine(boardString);
+        }
+
+        public static int CountMovesInRow(int row)
+        {
+            var bottomRow = bottom(row);
+            var board = 1UL;
+            var res = board & bottomRow;
+            return BitOperations.PopCount(res);
+        }
+
+        public static void MakeMove(int col)
+        {
+            var boardState = 1UL >> 7;
+            var board = (boardState + Position.bottom_mask_col(col)) & Position.column_mask(col);
+            var boardString = Utils.StateToBinaryString(board);
+            Console.WriteLine(boardString);
+        }
+
+        public static void BottomTest()
+        {
+            var t1 = Utils.StateToBinaryString(4432676798593);
+            Console.WriteLine(t1);
+        }
+
+        public static void ColumnTest(int col)
+        {
+            var boardString = Utils.StateToBinaryString(Position.column_mask(col));
+            Console.WriteLine(boardString);
+        }
+
+        public static void SetAllBits()
+        {
+            var board = 0UL;
+            for (int i = 0; i < 64; i++)
+            {
+                board = board | 1UL << i;
+                var state = Utils.StateToBinaryString(board);
+                Console.WriteLine(i);
+                Console.WriteLine(state);
+            }
+        }
+
+        public static ulong bottom(int row)
+        {
+            var start = 0ul;
+            for (int i = 0; i < 7; i++)
+            {
+                start = start | 1ul << (7 * i + row) ;
+            }
+            return start;
+        }
+    }
+}

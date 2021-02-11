@@ -17,6 +17,8 @@ namespace Connect4
             mask = pos.mask;
             moves = pos.moves;
             ColumnPlayed = pos.ColumnPlayed;
+            //MoveList = pos.MoveList;
+            MoveList = new List<ulong>();
         }
         public Position()
         {
@@ -25,11 +27,12 @@ namespace Connect4
             current_position = 0;
             mask = 0;
             moves = 0;
+            MoveList = new List<ulong>();
 
         }
         public static int WIDTH = 7;  // width of the board
         public static int HEIGHT = 6; // height of the board
-
+        public List<ulong> MoveList { get; set; }
         public static int MIN_SCORE = -(WIDTH * HEIGHT) / 2 + 3;
         public static int MAX_SCORE = (WIDTH * HEIGHT + 1) / 2 - 3;
         public position_t current_position; // bitmap of the current_player stones
@@ -52,6 +55,7 @@ namespace Connect4
 
         public void play(position_t move)
         {
+            MoveList.Add(move);
             current_position ^= mask;
             mask |= move;
             moves++;
@@ -83,7 +87,7 @@ namespace Connect4
 
         public bool canWinNext()
         {
-            return (winning_position() & possible()) == 1ul;
+            return (winning_position() & possible()) != 0ul;
         }
 
         public int nbMoves()
@@ -103,13 +107,13 @@ namespace Connect4
 
         public position_t possibleNonLosingMoves()
         {
-            Debug.Assert(!canWinNext());
+            //Debug.Assert(!canWinNext());
             position_t possible_mask = possible();
             position_t opponent_win = opponent_winning_position();
             position_t forced_moves = possible_mask & opponent_win;
-            if (forced_moves == 1ul)
+            if (forced_moves != 0ul)
             {
-                if ((forced_moves & (forced_moves - 1)) == 1ul) // check if there is more than one forced move
+                if ((forced_moves & (forced_moves - 1)) != 0ul) // check if there is more than one forced move
                     return 0;                           // the opponnent has two winning moves and you cannot stop him
                 else possible_mask = forced_moves;    // enforce to play the single forced move
             }
@@ -154,16 +158,13 @@ namespace Connect4
             return r & (board_mask ^ mask);
         }
 
-
-
-
         static position_t top_mask_col(int col) => 1ul << ((HEIGHT - 1) + col * (HEIGHT + 1));
 
-        static position_t bottom_mask_col(int col) => 1ul << col * (HEIGHT + 1);
+        public static position_t bottom_mask_col(int col) => 1ul << col * (HEIGHT + 1);
 
         public static position_t column_mask(int col) => ((1ul << HEIGHT) - 1) << col * (HEIGHT + 1);
 
-        static position_t bottom_mask(int width, int height) => 4432676798593ul | 1ul << (width - 1) * (height + 1);
+        public static position_t bottom_mask(int width, int height) => 4432676798593ul | 1ul << (width - 1) * (height + 1);
         static position_t board_mask => bottom_mask(WIDTH, HEIGHT) * ((1ul << HEIGHT) - 1);
 
         public static position_t bottom()

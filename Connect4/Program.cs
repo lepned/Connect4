@@ -10,67 +10,76 @@ namespace Connect4
     {
         static void Main(string[] args)
         {
-            //bottom test
-            //var bottom = Position.bottom();
-            //Console.WriteLine(bottom);
-            //var t1 = Utils.StateToBinaryString(4432676798593);
-            //Console.WriteLine(t1);
+            //BitTesting.RunTest1();
+            //BitTesting.MakeMove(1);
+            //BitTesting.BottomTest();
+            //BitTesting.SetAllBits();
+            //BitTesting.ColumnTest(1);
+            //BitTesting.FindMovesInRow(0);
+            //var res = BitTesting.CountMovesInRow(0);
+            HumanVsMachine();
 
-            //cpp version - Todo: Does not work yet :(
-            Solver solver = new Solver();
-            bool weak = false;
-            bool analyze = false;
-            Position P = new Position();
-            var positons = new char[700];
-            //explore(P, positons, 4);
-            //Console.WriteLine(positons.Length);
-            var rnd = new Random();
-            var moves = Enumerable.Range(1, 7).Select(i => "1");
-            var randMoves = Enumerable.Range(1, 50).Select(i => rnd.Next(1,8).ToString());
-            P.play(randMoves);
-            //var eval = solver.analyze(P, weak);
-            for (int i = 0; i < 7; i++)
+        }
+
+        private static void HumanVsMachine()
+        {
+            //player 1 is human
+            //player 2 is machine
+            //Console.WriteLine("Match started....\n");
+            //ulong pos = position.current_position;
+            //ulong mask = position.mask;
+            
+            var solver = new Solver();
+            var position = new Position();
+            bool humanToPlay = true;
+
+            while (!position.canWinNext())
             {
-                var score = solver.solve(P);
-                Console.WriteLine($"Score is {score}");
-                P.playCol(i);
-                //Utils.PrintPosToConsole(false, P.current_position, P.current_position ^ P.mask); 
+                if (humanToPlay) //means human to play
+                {
+                    if (position.current_position == 0) { Utils.PrintPosToConsole(true, position.current_position, position.current_position ^ position.mask); }
+                    Console.WriteLine("Choose a move between 1 .. 7");
+                    var col = Console.ReadLine();
+                    var cmd = Convert.ToInt32(col) - 1;
+                    if (position.canPlay(cmd))
+                    {
+                        position.playCol(cmd);
+                        Utils.PrintPosToConsole(humanToPlay, position.current_position, position.current_position ^ position.mask);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"The move to col {cmd + 1} is not allowed");
+                    }
+                }
+                
+                else
+                {
+                    Console.WriteLine("Computer thinking about a move...");
+                    Thread.Sleep(500);                    
+                    (ulong move,int score) = solver.solve(position, 2);
+                    //position.canWinNext()
+                    Console.WriteLine(score);
+                    position.play(move);
+                    Utils.PrintPosToConsole(false, position.current_position, position.current_position ^ position.mask);
+                }
+                
+                humanToPlay = !humanToPlay;
             }
-            Utils.PrintPosToConsole(false,P.current_position, P.current_position ^ P.mask);
-            ////P.playCol(col);
-            ////Console.WriteLine(position);
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    if (analyze)
-            //    {
-            //        var scores = solver.analyze(P, weak);
-            //        for (int j = 0; j < Position.WIDTH; j++)
-            //            Console.WriteLine(scores[j]);
-            //        //std::cout << " " << scores[i];
-            //    }
-            //    else
-            //    {
-            //        int score = solver.solve(P, weak);
-            //        Console.WriteLine(score);
-            //    }
+            Console.WriteLine("Some player won :)");
+        }
 
-            //    solver.solve(P);
-            //    //P.play(1);
-            //    var board = Utils.StateToBinaryString(P.current_position);
-            //    Console.WriteLine(board);
-            //}
 
-            //Console.Title = "Connect 4 - testes av Tine små";
-            //Console.WriteLine("Connect 4 - play the game against a computer!");
-            //var ai = new Game(6, 7);
-            ////var t1 = Utils.StateToBinaryString(ai.TopMask(0)); //will not show with a row size set to 6
-            ////Console.WriteLine(t1);
-            //var whoWon = HumanVsMachine(ai);
-            ////var whoWon = RandomGame(ai);
-            //Console.WriteLine($"{whoWon} won the game after {ai.MoveList.Count} moves");
-            //var lastMove = ai.MoveList.Peek();
-            //var board = Utils.StateToBinaryString(lastMove);
-            //Console.WriteLine($"Last moved played was\n {board}");
+        static void Run(Solver solver)
+        {
+            var P = new Position();
+            for (int i = 0; i < 20; i++)
+            {
+                (ulong move, int score) = solver.solve(P, 5);
+                P.play(move);
+                var state = Utils.StateToBinaryString(P.current_position);
+                Console.WriteLine(state);
+                Console.WriteLine($"Score is: {score}");
+            }
         }
 
         private static (ulong pos, ulong mask) MakePredictedMove(Game ai, ulong pos, ulong mask)
@@ -129,6 +138,8 @@ namespace Connect4
             Console.WriteLine($"{final}");
             return player;
         }
+
+
 
         private static string HumanVsMachine(Game ai)
         {
@@ -190,33 +201,33 @@ namespace Connect4
 
 
 
-        static void explore(Position P, char[] pos_str, int depth)
-        {
-            var solver = new Solver();
-            var visited = new HashSet<ulong>();
+        //static void explore(Position P, char[] pos_str, int depth)
+        //{
+        //    var solver = new Solver();
+        //    var visited = new HashSet<ulong>();
 
-            //ulong key = P.key3();
-            //if (!visited.insert(key).second)
-            //    return; // already explored position
+        //    //ulong key = P.key3();
+        //    //if (!visited.insert(key).second)
+        //    //    return; // already explored position
 
-            int nb_moves = P.nbMoves();
-            if (nb_moves <= depth)
-                Console.WriteLine(pos_str); // should probably define another outstream here...
-            if (nb_moves >= depth) return;  // do not explore at further depth
+        //    int nb_moves = P.nbMoves();
+        //    if (nb_moves <= depth)
+        //        Console.WriteLine(pos_str); // should probably define another outstream here...
+        //    if (nb_moves >= depth) return;  // do not explore at further depth
 
-            for (int i = 0; i < Position.WIDTH; i++) // explore all possible moves
-                if (P.canPlay(i) && !P.isWinningMove(i))
-                {
-                    Position P2 = new Position(P);
-                    var svar = solver.analyze(P2);
-                    var test = svar.Min();
-                    Console.WriteLine(test);
-                    P2.playCol(i);
-                    Console.WriteLine(P2.moveScore(P2.current_position));
-                    pos_str[nb_moves] = (char)(1 +  i);
-                    explore(P2, pos_str, depth);
-                    pos_str[nb_moves] = (char)0;
-                }
-        }
+        //    for (int i = 0; i < Position.WIDTH; i++) // explore all possible moves
+        //        if (P.canPlay(i) && !P.isWinningMove(i))
+        //        {
+        //            Position P2 = new Position(P);
+        //            var svar = solver.analyze(P2);
+        //            var test = svar.Min();
+        //            Console.WriteLine(test);
+        //            P2.playCol(i);
+        //            Console.WriteLine(P2.moveScore(P2.current_position));
+        //            pos_str[nb_moves] = (char)(1 +  i);
+        //            explore(P2, pos_str, depth);
+        //            pos_str[nb_moves] = (char)0;
+        //        }
+        //}
     }
 }

@@ -18,6 +18,7 @@ namespace Connect4
         public MoveSorter()
         {
             entries = new Entry[Position.WIDTH];
+            size = 0;
         }
         private int size { get; set; }
 
@@ -27,13 +28,13 @@ namespace Connect4
         {
             int pos = size++;
             
-            for (; pos==1 && entries[pos - 1].score > score; --pos)
+            for (; pos != 0 && entries[pos - 1].score > score; --pos)
             {
-                entries[pos].move = move;
-                entries[pos].score = score;
+                entries[pos] = entries[pos - 1];                
             }
 
-            entries[pos] = entries[pos];
+            entries[pos].move = move;
+            entries[pos].score = score;
         }
 
         /**
@@ -43,7 +44,7 @@ namespace Connect4
          */
         public ulong getNext()
         {
-            if (size == 1)
+            if (size != 0)
                 return entries[--size].move;
             else
                 return 0;
