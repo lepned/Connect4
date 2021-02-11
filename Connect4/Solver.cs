@@ -11,8 +11,9 @@ namespace Connect4
     {
         public Solver()
         {
-            Watch = new Stopwatch();           
-            nodeCount = 0;
+            Watch = new Stopwatch();
+            NodeCount = 0;
+            //works like an opening book for connect 4 - better to place your pieces close to the center
             ColumnOrder[0] = 3;
             ColumnOrder[1] = 4;
             ColumnOrder[2] = 2;
@@ -23,50 +24,56 @@ namespace Connect4
         }
 
         public Stopwatch Watch { get; set; }
-        
+
         public static int INVALID_MOVE = -1000;
         public ulong BestMove { get; set; }
-        
-        ulong nodeCount; // counter of explored nodes.
-        public ulong GetNodeCount() => nodeCount;
+        public int NodeCount { get; set; } // counter of explored nodes.
 
         //static int TABLE_SIZE = 24;
         //TranspositionTable<uint_t<Position::WIDTH*(Position::HEIGHT + 1) - TABLE_SIZE >, Position::position_t, uint8_t, TABLE_SIZE > transTable;
         public int[] ColumnOrder { get; set; } = new int[Position.WIDTH];
 
-        (ulong pos, int value) negamax(Position P, int alpha, int beta, int depth, bool maxPlayer)
+        int Negamax(Position P, int alpha, int beta, int depth)
         {
             if (depth == 0)
             {
-                return (BestMove, beta);
+                return alpha;
             }
 
             //Debug.Assert(alpha < beta);
             //Debug.Assert(!P.canWinNext());
-            nodeCount++;
+            NodeCount++;
             var possible = P.PossibleNonLosingMoves();
             if (possible == 0) // if no possible non losing move, opponent wins next move
             {
-                return (BestMove, -(Position.WIDTH * Position.HEIGHT - P.nbMoves()) / 2);
+                //Console.WriteLine("You win next");
+                return -(Position.WIDTH * Position.HEIGHT - P.Moves) / 2;
             }
 
-            if (P.nbMoves() >= Position.WIDTH * Position.HEIGHT - 2) // check for draw game
+            if (P.Moves >= Position.WIDTH * Position.HEIGHT - 2) // check for draw game
             {
-                return (P.CurrentPosition, 0);
+                //Console.WriteLine("Position is a draw");
+                return 0;
             }
 
-            int min = -(Position.WIDTH * Position.HEIGHT - 2 - P.nbMoves()) / 2;  // lower bound of score as opponent cannot win next move
+            int min = -(Position.WIDTH * Position.HEIGHT - 2 - P.Moves) / 2;  // lower bound of score as opponent cannot win next move
             if (alpha < min)
             {
-                alpha = min;                     // there is no need to keep alpha below our max possible score.
-                if (alpha >= beta) return (P.CurrentPosition, alpha);  // prune the exploration if the [alpha;beta] window is empty.
+                alpha = min; // there is no need to keep alpha below our max possible score.
+                if (alpha >= beta)
+                {
+                    return alpha;  // prune the exploration if the [alpha;beta] window is empty.
+                }
             }
 
-            int max = (Position.WIDTH * Position.HEIGHT - 1 - P.nbMoves()) / 2;   // upper bound of our score as we cannot win immediately
+            int max = (Position.WIDTH * Position.HEIGHT - 1 - P.Moves) / 2;   // upper bound of our score as we cannot win immediately
             if (beta > max)
             {
-                beta = max;                     // there is no need to keep beta above our max possible score.
-                if (alpha >= beta) return (P.CurrentPosition, beta);  // prune the exploration if the [alpha;beta] window is empty.
+                beta = max; // there is no need to keep beta above our max possible score.
+                if (alpha >= beta)
+                {
+                    return beta;  // prune the exploration if the [alpha;beta] window is empty.
+                }
             }
 
             //var key = P.key();
@@ -99,76 +106,44 @@ namespace Connect4
             {
                 var move = possible & Position.ColumnMask(ColumnOrder[i]);
                 if (move != 0ul)
-                    moves.add(move, P.moveScore(move));
+                    moves.Add(move, P.MoveScore(move));
             }
 
             ulong next;
-            if (maxPlayer)
+            int score = Int32.MinValue;
+            while ((next = moves.GetNext()) != 0ul)
             {
-                var value = Int32.MinValue;
-                while ((next = moves.getNext()) != 0ul)
+                Position p2 = new Position(P);
+                p2.Play(next);
+                score = Math.Max(score, -Negamax(p2, -beta, -alpha, depth - 1));
+                if (score >= beta)
                 {
-                    Position p2 = new Position(P);
-                    p2.Play(next);
-                    (ulong pos, int newvalue) = negamax(p2, beta, alpha, depth - 1, !maxPlayer);
-                    if (newvalue > value)
-                    {
-                        value = newvalue;
-                        BestMove = next;
-                    }
-                    alpha = Math.Max(alpha, value);
-                    if (alpha >= beta)
-                    {
-                        //transTable.put(key, score + Position.MAX_SCORE - 2 * Position.MIN_SCORE + 2); // save the lower bound of the position
-                        return (BestMove, value);  // prune the exploration if we find a possible move better than what we were looking for.
-                    }
-                    //if (score > alpha) alpha = score; // reduce the [alpha;beta] window for next exploration, as we only
-                    // need to search for a position that is better than the best so far.                   
+                    //transTable.put(key, score + Position.MAX_SCORE - 2 * Position.MIN_SCORE + 2); // save the lower bound of the position
+                    BestMove = next;
+                    return score; // prune the exploration if we find a possible move better than what we were looking for.
                 }
-                return (BestMove, value);
-            }
-
-            else
-            {
-                var value = Int32.MaxValue;
-                //var move = 0UL;
-                while ((next = moves.getNext()) != 0ul)
+                if (score > alpha)
                 {
-                    Position p2 = new Position(P);
-                    p2.Play(next);
-                    (ulong pos, int newvalue) = negamax(p2, beta, alpha, depth - 1, !maxPlayer);
-                    if (newvalue < value)
-                    {
-                        value = newvalue;
-                        BestMove = next;
-                    }
-
-                    beta = Math.Min(beta, value);
-                    if (beta <= alpha)
-                    {
-                        //transTable.put(key, score + Position.MAX_SCORE - 2 * Position.MIN_SCORE + 2); // save the lower bound of the position
-                        return (BestMove, value);  // prune the exploration if we find a possible move better than what we were looking for.
-                    }
-                    //if (score > alpha) alpha = score; // reduce the [alpha;beta] window for next exploration, as we only
-                    // need to search for a position that is better than the best so far.                   
+                    alpha = score;
+                    BestMove = next;
                 }
-                return (BestMove, value);
             }
-
+            //transTable.put(key, alpha - Position::MIN_SCORE + 1); // save the upper bound of the position
+            return alpha;
         }
 
 
         public (ulong move, int score) Solve(Position P, int depth, bool weak = false)
         {
             //Watch.Start();
-            if (P.canWinNext()) // check if win in one move as the Negamax function does not support this case.
+            if (P.CanWinNext()) // check if win in one move as the Negamax function does not support this case.
             {
                 Console.WriteLine("There is a win for you");
-                return (BestMove, (Position.WIDTH * Position.HEIGHT + 1 - P.nbMoves()) / 2);
+                return (BestMove, (Position.WIDTH * Position.HEIGHT + 1 - P.Moves) / 2);
             }
 
-            int min = -(Position.WIDTH * Position.HEIGHT - P.nbMoves()) / 2;
-            int max = (Position.WIDTH * Position.HEIGHT + 1 - P.nbMoves()) / 2;
+            var min = -(Position.WIDTH * Position.HEIGHT - P.Moves) / 2;
+            var max = (Position.WIDTH * Position.HEIGHT + 1 - P.Moves) / 2;
             if (weak)
             {
                 min = -1;
@@ -176,28 +151,26 @@ namespace Connect4
             }
 
             while (min < max)
-            {                    // iteratively narrow the min-max exploration window
-                int med = min + (max - min) / 2;
+            {   // iteratively narrow the min-max exploration window
+                var med = min + (max - min) / 2;
                 if (med <= 0 && min / 2 < med) med = min / 2;
                 else if (med >= 0 && max / 2 > med) med = max / 2;
-                (ulong m, int score) = negamax(P, med, med + 1, depth, true);   // use a null depth window to know if the actual score is greater or smaller than med                
+                var score = Negamax(P, med, med + 1, depth);   // use a null depth window to know if the actual score is greater or smaller than med                
                 if (score <= med) max = score;
                 else min = score;
             }
             return (BestMove, min);
         }
 
-
-
         public void Reset()
         {
-            nodeCount = 0;
+            NodeCount = 0;
             //transTable.reset();
         }
 
-        public void LoadBook(string book_file)
-        {
-            //book.load(book_file);
-        }
+        //public void LoadBook(string book_file)
+        //{
+        //    //book.load(book_file);
+        //}
     }
 }

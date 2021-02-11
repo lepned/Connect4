@@ -31,6 +31,7 @@ namespace Connect4
         public static int WIDTH = 7;  // width of the board
         public static int HEIGHT = 6; // height of the board
         public List<ulong> MoveList { get; set; }
+
         //public static int MIN_SCORE = -(WIDTH * HEIGHT) / 2 + 3;
         //public static int MAX_SCORE = (WIDTH * HEIGHT + 1) / 2 - 3;
 
@@ -68,13 +69,13 @@ namespace Connect4
                 int col = Convert.ToInt32(seq.ElementAt(i)) - 1;
                 if (IsWinningMove(col))
                 {
-                    Console.WriteLine($"Game over with the next move in column {col} after {nbMoves()} moves");
+                    Console.WriteLine($"Game over with the next move in column {col} after {Moves} moves");
                 }
                 if (col < 0 || col >= Position.WIDTH || !CanPlay(col) || IsWinningMove(col))
                 {
                     if (!CanPlay(col)) // invalid move
                     {
-                        Console.WriteLine($"Invalid move in col {col} after {nbMoves()} moves");
+                        Console.WriteLine($"Invalid move in col {col} after {Moves} moves");
                         continue;
                     }
                     return i;
@@ -85,22 +86,17 @@ namespace Connect4
             return seq.Count();
         }
 
-        public bool canWinNext()
+        public bool CanWinNext()
         {
             return (Winning_position() & Possible()) != 0ul;
         }
 
-        public int nbMoves()
-        {
-            return Moves;
-        }
-
-        public Bitboard key()
+        public Bitboard Key()
         {
             return CurrentPosition + Mask;
         }
 
-        public int moveScore(Bitboard move)
+        public int MoveScore(Bitboard move)
         {
             return BitOperations.PopCount(ComputeWinningPosition(CurrentPosition | move, Mask));
         }
@@ -124,7 +120,7 @@ namespace Connect4
 
         Bitboard Opponent_winning_position() => ComputeWinningPosition(CurrentPosition ^ Mask, Mask);
 
-        Bitboard Possible() => (Mask + BottomMask(WIDTH, HEIGHT)) & board_mask;
+        Bitboard Possible() => (Mask + BottomMask(WIDTH, HEIGHT)) & BoardMask;
 
         static Bitboard ComputeWinningPosition(Bitboard position, Bitboard mask)
         {
@@ -155,7 +151,7 @@ namespace Connect4
             r |= p & (position << (HEIGHT + 2));
             r |= p & (position >> 3 * (HEIGHT + 2));
 
-            return r & (board_mask ^ mask);
+            return r & (BoardMask ^ mask);
         }
 
         static Bitboard TopMaskCol(int col) => 1ul << ((HEIGHT - 1) + col * (HEIGHT + 1));
@@ -165,7 +161,8 @@ namespace Connect4
         public static Bitboard ColumnMask(int col) => ((1ul << HEIGHT) - 1) << col * (HEIGHT + 1);
 
         public static Bitboard BottomMask(int width, int height) => 4432676798593ul | 1ul << (width - 1) * (height + 1);
-        static Bitboard board_mask => BottomMask(WIDTH, HEIGHT) * ((1ul << HEIGHT) - 1);
-        
+        static Bitboard BoardMask => BottomMask(WIDTH, HEIGHT) * ((1ul << HEIGHT) - 1);
+
     }
 }
+

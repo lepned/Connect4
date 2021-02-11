@@ -10,10 +10,10 @@ namespace Connect4
     {
         static void Main(string[] args)
         {
-            HumanVsMachine();
+            HumanVsMachine(5);
         }
 
-        private static void HumanVsMachine()
+        private static void HumanVsMachine(int depth)
         {
             //player 1 is human
             //player 2 is machine
@@ -23,7 +23,7 @@ namespace Connect4
             var position = new Position();
             bool humanToPlay = true;
 
-            while (!position.canWinNext())
+            while (!position.CanWinNext())
             {
                 if (humanToPlay) //means human to play
                 {
@@ -45,8 +45,8 @@ namespace Connect4
                 else
                 {
                     Console.WriteLine("Computer thinking about a move...");
-                    Thread.Sleep(2000);                    
-                    (ulong move,int score) = solver.Solve(position, 4);
+                    Thread.Sleep(200);                    
+                    (ulong move,int score) = solver.Solve(position, depth);
                     Console.WriteLine(score);
                     position.Play(move);
                     Utils.PrintPosToConsole(false, position.CurrentPosition, position.CurrentPosition ^ position.Mask);
