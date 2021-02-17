@@ -81,9 +81,38 @@ namespace Connect4
             var start = 0ul;
             for (int i = 0; i < 7; i++)
             {
-                start = start | 1ul << (7 * i + row) ;
+                start |= 1ul << (7 * i + row) ;
             }
             return start;
+        }
+
+        public static int ColumnPlayed(ulong move)
+        {
+            for (int i = 0; i < 7; i++)
+            {
+                var res = Position.ColumnMask(i) & move;
+                if (res != 0)
+                {
+                    return i;
+                }
+            }
+
+            throw new ArgumentNullException();
+        }
+
+
+        public static int RowPlayed(ulong move)
+        {
+            for (int i = 0; i < 7; i++)
+            {
+                var res = RowMask(i) & move;
+                if (res != 0)
+                {
+                    return i;
+                }
+            }
+
+            throw new ArgumentNullException();
         }
     }
 }

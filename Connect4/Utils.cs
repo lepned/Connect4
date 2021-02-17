@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace Connect4
 {
+    public enum MoveRes
+    {
+        None = 0,
+        Player1 = 1,
+        Player2 = 2,
+    }
     public static class Utils
     {
         static string MoveResToString(MoveRes res)
@@ -18,8 +24,12 @@ namespace Connect4
                 _ => "Hmm",
             };
         }
-        
-        
+
+        /// <summary>
+        /// Mostly used for debugging
+        /// </summary>
+        /// <param name="bitboard as game position"></param>
+        /// <returns></returns>
         public static string BitboardToString(ulong bitboard)
         {
             var sb = new StringBuilder();
@@ -58,17 +68,15 @@ namespace Connect4
             return sb.ToString();
         }
 
-        public static void PrintPosToConsole(bool human, ulong toplay, ulong opponent)
+        public static string FillBoardWithPlayersTag(ulong player1, ulong player2)
         {
-            var humanToPlay = human;
             MoveRes[,] board = new MoveRes[7, 7];
             const int mask = 1;
-            var both = new List<ulong>() { toplay, opponent };
-            
-            foreach (var player in both)
-            {
-                var b = player;
+            var both = new List<(ulong pos, MoveRes player)>() { (player1, MoveRes.Player1), (player2, MoveRes.Player2) };
 
+            foreach (var (pos, player) in both)
+            {
+                var b = pos;
                 for (int col = 0; col < 7; col++)
                 {
                     for (int row = 0; row < 7; row++)
@@ -76,27 +84,18 @@ namespace Connect4
                         var bit = b & mask;
                         if (bit > 0)
                         {
-                            if (humanToPlay)
-                            {
-                                board[row, col] = MoveRes.Player1;
-                            }
-                            else
-                            {
-                                board[row, col] = MoveRes.Player2;
-                            }
+                            board[row, col] = player;
                         }
-                        
+
                         b >>= 1;
                     }
                 }
-
-                humanToPlay = !humanToPlay;
             }
 
-            DoWriteToConsole(board);
+            return CreateConsoleGUIFromBoard(board);
         }
 
-        private static void DoWriteToConsole(MoveRes[,] board)
+        private static string CreateConsoleGUIFromBoard (MoveRes[,] board)
         {
             var sb = new StringBuilder();
             sb.AppendLine();
@@ -112,8 +111,7 @@ namespace Connect4
                 sb.AppendLine();
             }
 
-            var consoleBoard = sb.ToString();
-            Console.WriteLine(consoleBoard);
+            return sb.ToString();
         }
     }
 }
