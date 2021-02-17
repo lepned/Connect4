@@ -103,8 +103,9 @@ namespace Connect4
 
             var whoWon = player1ToPlay ? "You won!" : "Computer won";
             Console.WriteLine(whoWon);
-            var path = @"c:\utvikling\connect4.txt";
-            File.WriteAllText(path, SB.ToString());
+            //only used for loggging of whole game
+            //var path = @"c:\utvikling\connect4.txt";
+            //File.WriteAllText(path, SB.ToString());
         }
 
         private static void PrintColumnPlayed(ulong move, Player player)
