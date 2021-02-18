@@ -1,9 +1,9 @@
 # Connect 4
 An alpha-beta pruning AI for Four in a Row with zero positional understanding.
 
-Enhancements:
-Implement iterativ search algorithm for alpha-beta depth
-Transposition table enhancement
-Monte Carlo Tree Search implementation as an alternativ search algorithm
+Enhancements:   
+Iterativ search algorithm for depth selection in alpha-beta.   
+Transposition table.   
+Monte Carlo Tree Search (MCTS) implementation as an alternativ search algorithm.   
 
 
