@@ -113,5 +113,13 @@ namespace Connect4
 
             return sb.ToString();
         }
+
+        static void Print(ulong pos, ulong mask, int player)
+        {
+            Console.Write("Board state mask:");
+            Console.WriteLine(Utils.BitboardToString(mask));
+            Console.Write($"Position for player {player}:");
+            Console.WriteLine(Utils.BitboardToString(pos));
+        }
     }
 }

@@ -12,11 +12,11 @@ namespace Connect4
     {
         public Solver()
         {
-            //Watch = new Stopwatch();
+            Watch = new Stopwatch();
             NodeCount = 0;
         }
 
-        //public Stopwatch Watch { get; set; }
+        public Stopwatch Watch { get; set; }
        
         public int NodeCount { get; set; } // counter of explored nodes.       
 

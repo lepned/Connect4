@@ -50,7 +50,6 @@ namespace Connect4
             ColumnOrder[6] = 0;
         }
 
-
         public static int WIDTH = 7;  // width of the board
         public static int HEIGHT = 6; // height of the board
         
@@ -59,7 +58,6 @@ namespace Connect4
         public Player PlayerToMove { get; set; }
         public Bitboard CurrentPosition { get; set; } //bitmap of the current player stones
         public Bitboard Mask { get; set; } // bitmap of all the already played spots
-
         public int Moves { get; set; } // number of moves played since the beginning of the game.
 
         public bool CanPlay(int col) => (Mask & TopMaskCol(col)) == 0;
@@ -113,11 +111,11 @@ namespace Connect4
             for (int i = 0; i < 7; i++)
             {
                 var col = ColumnOrder[i];
-                var columnValue = Position.ColumnMask(col);
-                var isValid = (Mask & columnValue) != columnValue;
+                //var isValid = (Mask & columnValue) != columnValue;
 
-                if (isValid)
+                if (CanPlay(col))
                 {
+                    var columnValue = Position.ColumnMask(col);
                     var count = BitOperations.PopCount(columnValue & Mask);
                     var move = BitTesting.RowMask(count) & columnValue;
                     yield return move;
@@ -172,72 +170,6 @@ namespace Connect4
         private Bitboard TopMaskCol(int col) => 1ul << ((HEIGHT - 1) + col * (HEIGHT + 1));
         public static Bitboard BottomMaskCol(int col) => 1ul << col * (HEIGHT + 1);
         public static Bitboard ColumnMask(int col) => ((1ul << HEIGHT) - 1) << col * (HEIGHT + 1);
-
-        
-        //public bool CanWinNext()
-        //{
-        //    return (WinningPosition() & Possible()) != 0ul;
-        //}
-
-        //public Bitboard Key()
-        //{
-        //    return CurrentPosition + Mask;
-        //}
-
-        //public Bitboard PossibleNonLosingMoves()
-        //{
-        //    Bitboard possible_mask = Possible();
-        //    Bitboard opponent_win = OpponentWinningPosition();
-        //    Bitboard forced_moves = possible_mask & opponent_win;
-        //    if (forced_moves != 0ul)
-        //    {
-        //        if ((forced_moves & (forced_moves - 1)) != 0ul) // check if there is more than one forced move
-        //            return 0;                           // the opponnent has two winning moves and you cannot stop him
-        //        else possible_mask = forced_moves;    // enforce to play the single forced move
-        //    }
-        //    return possible_mask & ~(opponent_win >> 1);  // avoid to play below an opponent winning spot
-        //}
-
-        //public Bitboard WinningPosition() => ComputeWinningPosition(CurrentPosition, Mask);
-
-        //Bitboard OpponentWinningPosition() => ComputeWinningPosition(CurrentPosition ^ Mask, Mask);
-
-        //public Bitboard Possible() => (Mask + BottomMask(WIDTH, HEIGHT)) & BoardMask;
-
-        //static Bitboard ComputeWinningPosition(Bitboard position, Bitboard mask)
-        //{
-        //    // vertical;
-        //    Bitboard r = (position << 1) & (position << 2) & (position << 3);
-
-        //    //horizontal
-        //    Bitboard p = (position << (HEIGHT + 1)) & (position << 2 * (HEIGHT + 1));
-        //    r |= p & (position << 3 * (HEIGHT + 1));
-        //    r |= p & (position >> (HEIGHT + 1));
-        //    p = (position >> (HEIGHT + 1)) & (position >> 2 * (HEIGHT + 1));
-        //    r |= p & (position << (HEIGHT + 1));
-        //    r |= p & (position >> 3 * (HEIGHT + 1));
-
-        //    //diagonal 1
-        //    p = (position << HEIGHT) & (position << 2 * HEIGHT);
-        //    r |= p & (position << 3 * HEIGHT);
-        //    r |= p & (position >> HEIGHT);
-        //    p = (position >> HEIGHT) & (position >> 2 * HEIGHT);
-        //    r |= p & (position << HEIGHT);
-        //    r |= p & (position >> 3 * HEIGHT);
-
-        //    //diagonal 2
-        //    p = (position << (HEIGHT + 2)) & (position << 2 * (HEIGHT + 2));
-        //    r |= p & (position << 3 * (HEIGHT + 2));
-        //    r |= p & (position >> (HEIGHT + 2));
-        //    p = (position >> (HEIGHT + 2)) & (position >> 2 * (HEIGHT + 2));
-        //    r |= p & (position << (HEIGHT + 2));
-        //    r |= p & (position >> 3 * (HEIGHT + 2));
-
-        //    return r & (BoardMask ^ mask);
-        //}
-
-        //public static Bitboard BottomMask(int width, int height) => 4432676798593ul | 1ul << (width - 1) * (height + 1);
-        //static Bitboard BoardMask => BottomMask(WIDTH - 1, HEIGHT) * ((1ul << HEIGHT) - 1);
 
     }
 }
